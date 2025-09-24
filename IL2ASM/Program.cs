@@ -374,20 +374,112 @@ namespace IL2ASM
                     }
                     break;
                 case Code.Bge:
-                    break;
                 case Code.Bge_S:
+                    if (instruction.Operand is Instruction geInstr)
+                    {
+                        string label = $"IL_{geInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jge {label}");
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.ge {label}");
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    bge {label}");
+                        }
+                    }
                     break;
                 case Code.Bge_Un:
-                    break;
                 case Code.Bge_Un_S:
+                    if (instruction.Operand is Instruction geUnInstr)
+                    {
+                        string label = $"IL_{geUnInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jae {label}");  // For unsigned, use jae (jump if above or equal)
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.hs {label}");  // hs = higher or same (unsigned >=)
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    bhs {label}");  // hs = higher or same (unsigned >=)
+                        }
+                    }
                     break;
                 case Code.Bgt:
-                    break;
                 case Code.Bgt_S:
+                    if (instruction.Operand is Instruction gtInstr)
+                    {
+                        string label = $"IL_{gtInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jg {label}");
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.gt {label}");
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    bgt {label}");
+                        }
+                    }
                     break;
                 case Code.Bgt_Un_S:
+                    if (instruction.Operand is Instruction gtUnInstr)
+                    {
+                        string label = $"IL_{gtUnInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    ja {label}");  // For unsigned, use ja (jump if above)
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.hi {label}");  // hi = higher (unsigned >)
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    bhi {label}");  // hi = higher (unsigned >)
+                        }
+                    }
                     break;
                 case Code.Ble:
+                    if (instruction.Operand is Instruction leInstr)
+                    {
+                        string label = $"IL_{leInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jle {label}");
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.le {label}");
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    ble {label}");
+                        }
+                    }
                     break;
                 case Code.Blt:
                 case Code.Blt_S:
@@ -412,12 +504,48 @@ namespace IL2ASM
                     }
                     break;
                 case Code.Blt_Un:
-                    break;
                 case Code.Blt_Un_S:
+                    if (instruction.Operand is Instruction ltUnInstr)
+                    {
+                        string label = $"IL_{ltUnInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jb {label}");  // For unsigned comparisons, use jb (jump if below)
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.lo {label}");  // lo = lower (unsigned <)
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    blo {label}");  // lo = lower (unsigned <)
+                        }
+                    }
                     break;
                 case Code.Bne_Un:
-                    break;
                 case Code.Bne_Un_S:
+                    if (instruction.Operand is Instruction neUnInstr)
+                    {
+                        string label = $"IL_{neUnInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    cmp rax, rbx");
+                            AddLine($"    jne {label}");  // Jump if not equal
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cmp x0, x1");
+                            AddLine($"    b.ne {label}");  // Branch if not equal
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, r1");
+                            AddLine($"    bne {label}");  // Branch if not equal
+                        }
+                    }
                     break;
                 case Code.Box:
                     if (instruction.Operand is ITypeDefOrRef boxType)
@@ -444,10 +572,34 @@ namespace IL2ASM
                     }
                     break;
                 case Code.Break:
+                    // Debug breakpoint instruction
+                    if (_architecture == "x64" || _architecture == "x86")
+                        AddLine("    int 3");  // Software breakpoint for x86/x64
+                    else if (_architecture == "arm64")
+                        AddLine("    brk #0");  // Breakpoint for ARM64
+                    else if (_architecture == "arm32")
+                        AddLine("    bkpt #0");  // Breakpoint for ARM32
                     break;
                 case Code.Brfalse:
-                    break;
                 case Code.Brfalse_S:
+                    if (instruction.Operand is Instruction falseInstr)
+                    {
+                        string label = $"IL_{falseInstr.Offset:X4}";
+                        if (_architecture == "x64" || _architecture == "x86")
+                        {
+                            AddLine("    test rax, rax");  // Test if value is zero
+                            AddLine($"    jz {label}");    // Jump if zero (null, false, or 0)
+                        }
+                        else if (_architecture == "arm64")
+                        {
+                            AddLine("    cbz x0, {label}");  // Compare and branch if zero
+                        }
+                        else if (_architecture == "arm32")
+                        {
+                            AddLine("    cmp r0, #0");     // Compare with zero
+                            AddLine($"    beq {label}");    // Branch if equal to zero
+                        }
+                    }
                     break;
                 case Code.Brtrue:
                 case Code.Brtrue_S:
